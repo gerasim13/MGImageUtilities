@@ -52,7 +52,7 @@
 	CGRect sourceRect, destRect;
 	if (cropping) {
 		destRect = CGRectMake(0, 0, targetWidth, targetHeight);
-		float destX, destY;
+		float destX = 0.0, destY = 0.0;
 		if (resizeMethod == MGImageResizeCrop) {
 			// Crop center
 			destX = round((scaledWidth - targetWidth) / 2.0);
@@ -113,7 +113,7 @@
 		// Try older method.
 		CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
 		CGContextRef context = CGBitmapContextCreate(NULL, scaledWidth, scaledHeight, 8, (scaledWidth * 4), 
-													 colorSpace, kCGImageAlphaPremultipliedLast);
+													 colorSpace, (CGBitmapInfo)kCGImageAlphaPremultipliedLast);
 		CGImageRef sourceImg = CGImageCreateWithImageInRect([self CGImage], sourceRect);
 		CGContextDrawImage(context, destRect, sourceImg);
 		CGImageRelease(sourceImg);
