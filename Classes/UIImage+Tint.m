@@ -18,43 +18,42 @@
 }
 
 
-- (UIImage *)imageTintedWithColor:(UIColor *)color fraction:(CGFloat)fraction
+- (UIImage*)imageTintedWithColor:(UIColor*)color fraction:(CGFloat)fraction
 {
-	if (color) {
-		// Construct new image the same size as this one.
-		UIImage *image;
-		
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_4_0
-		if ([UIScreen instancesRespondToSelector:@selector(scale)]) {
-			UIGraphicsBeginImageContextWithOptions([self size], NO, 0.f); // 0.f for scale means "scale for device's main screen".
-		} else {
-			UIGraphicsBeginImageContext([self size]);
-		}
-#else
-		UIGraphicsBeginImageContext([self size]);
-#endif
-		CGRect rect = CGRectZero;
-		rect.size = [self size];
-		
-		// Composite tint color at its own opacity.
-		[color set];
-		UIRectFill(rect);
-		
-		// Mask tint color-swatch to this image's opaque mask.
-		// We want behaviour like NSCompositeDestinationIn on Mac OS X.
-		[self drawInRect:rect blendMode:kCGBlendModeDestinationIn alpha:1.0];
-		
-		// Finally, composite this image over the tinted mask at desired opacity.
-		if (fraction > 0.0) {
-			// We want behaviour like NSCompositeSourceOver on Mac OS X.
-			[self drawInRect:rect blendMode:kCGBlendModeSourceAtop alpha:fraction];
-		}
-		image = UIGraphicsGetImageFromCurrentImageContext();
-		UIGraphicsEndImageContext();
-		
-		return image;
+	if (color)
+    {
+        UIImage *image = nil;
+        UIGraphicsBeginImageContextWithOptions(self.size, NO, self.scale);
+        {
+            // Construct new image the same size as this one.
+            CGRect rect = CGRectZero;
+            rect.size   = self.size;
+            // Composite tint color at its own opacity.
+            CGContextRef context = UIGraphicsGetCurrentContext();
+            [color set];
+            CGContextFillRect(context, rect);
+            CGContextTranslateCTM(context, 0, self.size.height);
+            CGContextScaleCTM(context, 1.0, -1.0);
+            // Mask tint color-swatch to this image's opaque mask.
+            // We want behaviour like NSCompositeDestinationIn on Mac OS X.
+            {
+                CGContextSetAlpha(context, 1.0);
+                CGContextSetBlendMode(context, kCGBlendModeDestinationIn);
+                CGContextDrawImage(context, rect, self.CGImage);
+            }
+            // Finally, composite this image over the tinted mask at desired opacity.
+            // We want behaviour like NSCompositeSourceOver on Mac OS X.
+            if (fraction > 0.0)
+            {
+                CGContextSetAlpha(context, fraction);
+                CGContextSetBlendMode(context, kCGBlendModeSourceAtop);
+                CGContextDrawImage(context, rect, self.CGImage);
+            }
+            image = UIGraphicsGetImageFromCurrentImageContext();
+        }
+        UIGraphicsEndImageContext();
+        return image;
 	}
-	
 	return self;
 }
 
